@@ -1,4 +1,4 @@
-`timescale 1ns/1ps
+`timescale 1ns/1ns
 
 module tb_sbox;
 
@@ -27,6 +27,7 @@ initial begin
     $finish;
 end
 
+sbox c1 (inp, outp);
 
 initial begin
     $dumpfile("sbox_dump.vcd");
