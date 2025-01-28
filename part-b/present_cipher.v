@@ -101,20 +101,37 @@ output [63:0] rkey;             // next round key
 // ===== DO NOT MODIFY ANYTHING ABOVE THIS =====
 
 // declare any necessary wires/reg
-wire [63:0] sbox_inp;
-
+wire [63:0] sbox_inp, sbox_out, perm_out;
 
 // instantiate your present_keyschedule module to change the next state of key update and next round key
-
+present_keyschedule keysched (
+    .kstate_in(kstate_in),
+    .round_counter(round_counter),
+    .kstate_out(kstate_out),
+    .rkey(rkey)
+);
 
 // add round key to the plaintext state input
 assign sbox_inp = pstate_in ^ rkey;
 
 // perform sbox operation, instantiate the sbox module
-
+genvar i;
+generate
+    for (i = 0; i < 16; i = i + 1) begin
+        sbox sbox_inst (
+            .inp(sbox_inp[(i+1)*4-1:i*4]),
+            .outp(sbox_out[(i+1)*4-1:i*4])
+        );
+    end
+endgenerate
 
 // perform bit-permutation operation, instantiate the bit-permutation module
+perm perm_inst (
+    .state_in(sbox_out),
+    .state_out(perm_out)
+);
 
+assign pstate_out = perm_out;
 
 endmodule
 
@@ -132,19 +149,24 @@ output [63:0] rkey;                 // next round key
 // ===== DO NOT MODIFY ANYTHING ABOVE THIS =====
 
 // declare any necessary wires/reg
-
+  
 
 // generate the next round key from the current key update state
-
+   assign rkey = kstate_in[79:16]; //initial round key
 
 // perform the key update operation
-// use the concatenation operator for the 1st step
-
+   assign kstate_out = kstate_in;
+   
+// use the concatenation operator for the 1st step 
+//left shift by 61 bits
+  assign kstate_out = {kstate_out[18:0], kstate_out[79:19]};
+  
 // for 2nd step, perform sbox operation on 79 to 76 bits of key state
+  sbox sbox_inst (.inp(kstate_out[79:76]), .outp(kstate_out[79:76]));
 
-
-// NOTE: for the 3rd step in key update, xor the 19 to 15 bits with (round_counter + 1), instead of round_counter
-
+// NOTE: for the 3rd step in key update, xor the 19 to 15 bits with (round_counter + 1), instead of round_counter     
+   assign kstate_out[19:15] = kstate_out[19:15]^ (round_counter + 1); //xor round constant to first 4 bits
+   // assign rkey = kstate_out[79:16];   
 
 endmodule
 
@@ -160,6 +182,16 @@ output [63:0] state_out;        // output state
 // ===== DO NOT MODIFY ANYTHING ABOVE THIS =====
 
 // declare any necessary wires/reg
+   assign state_out = {
+        state_in[0], state_in[16], state_in[32], state_in[48], state_in[1], state_in[17], state_in[33], state_in[49],
+        state_in[2], state_in[18], state_in[34], state_in[50], state_in[3], state_in[19], state_in[35], state_in[51],
+        state_in[4], state_in[20], state_in[36], state_in[52], state_in[5], state_in[21], state_in[37], state_in[53],
+        state_in[6], state_in[22], state_in[38], state_in[54], state_in[7], state_in[23], state_in[39], state_in[55],
+        state_in[8], state_in[24], state_in[40], state_in[56], state_in[9], state_in[25], state_in[41], state_in[57],
+        state_in[10], state_in[26], state_in[42], state_in[58], state_in[11], state_in[27], state_in[43], state_in[59],
+        state_in[12], state_in[28], state_in[44], state_in[60], state_in[13], state_in[29], state_in[45], state_in[61],
+        state_in[14], state_in[30], state_in[46], state_in[62], state_in[15], state_in[31], state_in[47], state_in[63]
+    };
 
 
 // perform the bit-permutation operation by either using high level constructs for concurrency or continuous assignments
