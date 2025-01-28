@@ -8,7 +8,7 @@ wire [3:0] outp;
 integer i;
 
 // instantiate the S-box module
-sbox uut ( .inp(inp), .outp(outp) );
+sbox sb ( .inp(inp), .outp(outp) );
 
 initial begin
     // display header
@@ -27,7 +27,6 @@ initial begin
     $finish;
 end
 
-sbox c1 (inp, outp);
 
 initial begin
     $dumpfile("sbox_dump.vcd");
